@@ -1,5 +1,5 @@
 const { AuthenticationError } = require('apollo-server-express');
-const { User, Thought } = require('../models');
+const { User, Book } = require('../models');
 const { signToken } = require('../utils/auth');
 
 
@@ -35,51 +35,29 @@ const resolvers = {
     },
     saveBook: async (parent, { bookId }, context) => {
       if (context.user) {
-        return User.findOneAndUpdate(
+        const updateUser = User.findOneAndUpdate(
           { _id: context.user._id },
           { $addToSet: { savedBooks: input } },
           {
             new: true,
             runValidators: true,
           }
-        );
+        )
+        return updateUser
       }
       throw new AuthenticationError('You need to be logged in!');
     },
-    removeThought: async (parent, { thoughtId }, context) => {
+    removeBook: async (parent, { thoughtId }, context) => {
       if (context.user) {
-        const thought = await Thought.findOneAndDelete({
-          _id: thoughtId,
-          thoughtAuthor: context.user.username,
-        });
-
-        await User.findOneAndUpdate(
+        const updateUser = await User.findOneAndUpdate(
           { _id: context.user._id },
-          { $pull: { thoughts: thought._id } }
-        );
-
-        return thought;
+          { $pull: { savedBooks: { bookId: bookId } } }
+        )
+        return updateUser
       }
-      throw new AuthenticationError('You need to be logged in!');
-    },
-    removeComment: async (parent, { thoughtId, commentId }, context) => {
-      if (context.user) {
-        return Thought.findOneAndUpdate(
-          { _id: thoughtId },
-          {
-            $pull: {
-              comments: {
-                _id: commentId,
-                commentAuthor: context.user.username,
-              },
-            },
-          },
-          { new: true }
-        );
-      }
-      throw new AuthenticationError('You need to be logged in!');
+      throw new AuthenticationError('You need to be logged in!')
     },
   },
-};
+}
 
 module.exports = resolvers;
