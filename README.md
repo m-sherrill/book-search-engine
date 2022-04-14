@@ -1,1 +1,1 @@
-Book Search Engine Refractor
+# Pass JWT to Resolver with Context (Server-side)
